@@ -1,6 +1,19 @@
-dist
+# Build artifacts
+.stack-work/
+dist/
 dist-*
-cabal-dev
+dist-newstyle/
+public/
+cabal-dev/
+.cabal-sandbox/
+cabal.sandbox.config
+cabal.project.local
+cabal.project.local~
+.hsenv
+.HTF/
+.ghc.environment.*
+
+# Executables and other build outputs
 *.o
 *.hi
 *.hie
@@ -8,16 +21,31 @@ cabal-dev
 *.chs.h
 *.dyn_o
 *.dyn_hi
-.hpc
-.hsenv
-.cabal-sandbox/
-cabal.sandbox.config
 *.prof
-*.aux
-*.hp
+*.tix
+*.hpc
 *.eventlog
-.stack-work/
-cabal.project.local
-cabal.project.local~
-.HTF/
-.ghc.environment.*
+*.hp
+*.aux
+*.dump-*
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Editor-specific files
+*~
+.#*
+.#*#
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Other common files to ignore
+.ghci
+.history
