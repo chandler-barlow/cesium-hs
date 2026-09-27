@@ -33,6 +33,45 @@ eventually `id`) work because the records use `NoFieldSelectors` +
 too, to disambiguate same-named fields across different option records in
 record-update syntax (see `app/Main.hs`).
 
+## Demo: live public flights
+
+`cesium-hello-globe` shows live aircraft near NYC, as a stress test of the
+library (hundreds of entities, refreshed on a timer, real external JSON).
+
+- [x] `Cesium.Browser`: `fetchJson` (async `fetch` + `JSON.parse`, in one
+      JSFFI call) and `setInterval` (polling) - both generic Web API
+      bindings, not Cesium-specific, but needed to pull this off
+- [x] `Cesium.Core`: `arrayLength`/`arrayIndex` (walk a JS array from
+      Haskell) and `hasNumProp`/`getPropNumOr`/`getPropStrOr` (read a
+      field defensively - external JSON's shape isn't guaranteed the way
+      Cesium's own API objects are; adsb.lol's `alt_baro` is sometimes the
+      *string* `"ground"` instead of a number, which is exactly the kind
+      of thing these guard against)
+- [x] `app/Flights.hs`: polls every 15s, clears and rebuilds the entity
+      set each time (no position smoothing/diffing yet - a small pop each
+      refresh, not a smooth glide)
+
+**Why there's a proxy at all**: the free ADS-B aggregators (adsb.lol,
+airplanes.live, adsb.one, OpenSky) are built for server-side consumption,
+not browser embedding - none of them send permissive CORS headers, so a
+direct `fetch` from the page is blocked by the browser regardless of the
+data being genuinely free and public. `proxy/Main.hs` is a small **native**
+(non-wasm) executable, `adsb-proxy`, that fetches api.adsb.lol server-side
+(not subject to CORS) and re-serves the JSON with
+`Access-Control-Allow-Origin: *`. It needs the project's *default* devShell
+(`nix develop`, not `.#wasm`) - confirmed that devShell can build a normal
+native Haskell executable (same as verified for miso-bulma previously),
+plus the project's own `flake.nix` now layers `pkgs.zlib` onto it
+(`http-client`/`warp`'s dependency chain needs the system `libz`, which
+isn't in the upstream devShell by default).
+
+Run it with `make proxy` (or `nix develop --command cabal run adsb-proxy`)
+in its own terminal, alongside `make serve`. Verified end-to-end: a real
+request against a locally-running proxy returned 320 real aircraft near
+NYC with the correct CORS header, and the proxy survived the request
+without crashing (an earlier attempt crashed on first request - Warp's
+timer manager needs `-threaded`, now in `adsb-proxy`'s `ghc-options`).
+
 ## Phase 0 - FFI plumbing
 
 - [x] `Cesium.Core`: `newObject`/`setProp*`/`getProp`/`global` helpers over `JSVal`

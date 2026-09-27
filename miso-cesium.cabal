@@ -3,7 +3,7 @@ name:               miso-cesium
 version:            0.1.0.0
 synopsis:           Miso bindings for CesiumJS (GHC wasm backend)
 description:        Miso bindings for CesiumJS (GHC wasm backend)
-license:            BSD-3-Clause
+license:            MIT
 author:             dmjio
 maintainer:         code@dmj.io
 category:           Web
@@ -39,6 +39,7 @@ library
     Cesium.Tileset
     Cesium.Options
     Cesium.Simple
+    Cesium.Browser
   hs-source-dirs:
     lib
   default-language:
@@ -49,8 +50,29 @@ executable cesium-hello-globe
     wasm, warnings
   main-is:
     Main.hs
+  other-modules:
+    Flights
   build-depends: base < 5, miso, miso-cesium
   hs-source-dirs:
     app
   default-language:
     Haskell2010
+
+-- Native (non-wasm) - a CORS proxy in front of api.adsb.lol for the
+-- flight-tracker demo. Not buildable under wasm32-wasi-cabal; run it
+-- from the project's *default* devShell instead (see proxy/Main.hs).
+executable adsb-proxy
+  import:
+    warnings
+  main-is:
+    Main.hs
+  ghc-options:
+    -threaded
+  build-depends:
+    base < 5, bytestring, http-client, http-client-tls, http-types, wai, warp
+  hs-source-dirs:
+    proxy
+  default-language:
+    Haskell2010
+  if arch(wasm32)
+    buildable: False

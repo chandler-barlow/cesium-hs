@@ -13,6 +13,7 @@ module Cesium
   , module Cesium.Scene
   , module Cesium.Clock
   , module Cesium.Tileset
+  , module Cesium.Browser
   ) where
 -----------------------------------------------------------------------------
 import Cesium.Core
@@ -26,4 +27,5 @@ import Cesium.Terrain
 import Cesium.Scene
 import Cesium.Clock
 import Cesium.Tileset
+import Cesium.Browser
 -----------------------------------------------------------------------------

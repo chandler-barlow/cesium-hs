@@ -29,7 +29,6 @@ module Cesium.Options
   ) where
 -----------------------------------------------------------------------------
 import GHC.Generics
-import GHC.Wasm.Prim (JSVal)
 
 import Cesium.Core
 import Cesium.Math (Cartesian3, Color, unCartesian3, unColor)

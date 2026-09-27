@@ -14,6 +14,8 @@ import           Miso.Html.Property as P
 import qualified Cesium
 import qualified Cesium.Simple as Simple
 -----------------------------------------------------------------------------
+import qualified Flights
+-----------------------------------------------------------------------------
 data Model = Model
   deriving (Show, Eq)
 -----------------------------------------------------------------------------
@@ -111,6 +113,10 @@ initCesium = do
 
   -- Phase 9: scene/globe/clock toggles
   configureSceneAndClock viewer
+
+  -- Live public flights near NYC (where the camera already is), via the
+  -- local adsb-proxy - see docs/checklist.md and README for how to run it
+  Flights.pollFlights viewer (Flights.FlightQuery 40.7128 (-74.0060) 250)
 -----------------------------------------------------------------------------
 -- | Phase 9: a scene/globe/clock configuration pass, kept separate from
 -- 'initCesium' just for readability.

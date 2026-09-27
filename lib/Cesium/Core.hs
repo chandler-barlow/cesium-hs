@@ -21,8 +21,14 @@ module Cesium.Core
   , consoleLog
   , newArray
   , arrayPush
+  , arrayLength
+  , arrayIndex
   , num
   , setIonAccessToken
+  , consoleError
+  , hasNumProp
+  , getPropNumOr
+  , getPropStrOr
   ) where
 -----------------------------------------------------------------------------
 import GHC.Wasm.Prim
@@ -71,6 +77,12 @@ foreign import javascript unsafe "return []"
 foreign import javascript unsafe "$1.push($2)"
   arrayPush :: JSVal -> JSVal -> IO ()
 -----------------------------------------------------------------------------
+foreign import javascript unsafe "return $1.length"
+  arrayLength :: JSVal -> IO Double
+
+foreign import javascript unsafe "return $1[$2]"
+  arrayIndex :: JSVal -> Double -> IO JSVal
+-----------------------------------------------------------------------------
 -- | Box a raw number as a 'JSVal', e.g. for pushing into an array built
 -- with 'newArray'\/'arrayPush' (object properties can go straight through
 -- 'setPropNum' instead).
@@ -84,4 +96,26 @@ foreign import javascript unsafe "Cesium.Ion.defaultAccessToken = $1"
 
 setIonAccessToken :: String -> IO ()
 setIonAccessToken = js_setIonAccessToken . str
+-----------------------------------------------------------------------------
+foreign import javascript unsafe "console.error($1)"
+  consoleError :: JSString -> IO ()
+-----------------------------------------------------------------------------
+-- | These three are for walking JSON parsed from an external source (e.g.
+-- 'Cesium.Browser.fetchJson') where a field's presence and type aren't
+-- guaranteed - unlike Cesium's own API objects, which we control the
+-- shape of by construction.
+foreign import javascript unsafe "return typeof $1[$2] === 'number'"
+  hasNumProp :: JSVal -> JSString -> IO Bool
+
+-- | @getPropNumOr obj key fallback@ - @fallback@ if the field is missing
+-- or isn't actually a JS number (e.g. adsb.lol's @alt_baro@, which can be
+-- the literal string @\"ground\"@).
+foreign import javascript unsafe
+  "return (typeof $1[$2] === 'number') ? $1[$2] : $3"
+  getPropNumOr :: JSVal -> JSString -> Double -> IO Double
+
+-- | As 'getPropNumOr', for string-typed fields.
+foreign import javascript unsafe
+  "return (typeof $1[$2] === 'string') ? $1[$2] : $3"
+  getPropStrOr :: JSVal -> JSString -> JSString -> IO JSString
 -----------------------------------------------------------------------------

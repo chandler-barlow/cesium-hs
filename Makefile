@@ -24,5 +24,11 @@ repl:
 serve:
 	http-server public
 
+# For the live-flights demo. Native, not wasm - run this from the
+# project's *default* devShell (`nix develop`, no `.#wasm`), in its own
+# terminal, alongside `make serve`. See proxy/Main.hs.
+proxy:
+	cabal run adsb-proxy
+
 clean:
 	rm -rf dist-newstyle public

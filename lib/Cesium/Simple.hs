@@ -41,7 +41,6 @@ module Cesium.Simple
   ) where
 -----------------------------------------------------------------------------
 import GHC.Generics (Generic)
-import GHC.Wasm.Prim (JSString)
 
 import Cesium.Core
 import Cesium.Options
