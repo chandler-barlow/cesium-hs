@@ -13,6 +13,8 @@ module Cesium.Viewer
   , flyTo
   , setView
   , pick
+  , computeViewRectangleDegrees
+  , onCameraMoveEnd
   ) where
 -----------------------------------------------------------------------------
 import GHC.Wasm.Prim
@@ -91,4 +93,38 @@ foreign import javascript unsafe "return $1.scene.pick($2)"
 -- 'Cesium.Entity.Entity' that owns it - pull it out with 'Cesium.Core.getProp'.
 pick :: Viewer -> JSVal -> IO JSVal
 pick (Viewer v) windowPosition = js_pick v windowPosition
+-----------------------------------------------------------------------------
+foreign import javascript unsafe
+  "const r = $1.camera.computeViewRectangle($1.scene.globe.ellipsoid); if (!r) return undefined; return [Cesium.Math.toDegrees(r.west), Cesium.Math.toDegrees(r.south), Cesium.Math.toDegrees(r.east), Cesium.Math.toDegrees(r.north)]"
+  js_computeViewRectangleDegrees :: JSVal -> IO JSVal
+
+-- | The west\/south\/east\/north (degrees) lat\/lon rectangle currently
+-- visible on the globe, or 'Nothing' if the camera isn't looking at the
+-- globe at all (e.g. pointed off into space).
+computeViewRectangleDegrees :: Viewer -> IO (Maybe (Double, Double, Double, Double))
+computeViewRectangleDegrees (Viewer v) = do
+  result <- js_computeViewRectangleDegrees v
+  defined <- isDefined result
+  if not defined
+    then pure Nothing
+    else do
+      w <- arrayIndex result 0 >>= unNum
+      s <- arrayIndex result 1 >>= unNum
+      e <- arrayIndex result 2 >>= unNum
+      n <- arrayIndex result 3 >>= unNum
+      pure (Just (w, s, e, n))
+-----------------------------------------------------------------------------
+foreign import javascript "wrapper"
+  js_wrapNullaryCallback :: IO () -> IO JSVal
+
+foreign import javascript unsafe "$1.camera.moveEnd.addEventListener($2)"
+  js_onCameraMoveEnd :: JSVal -> JSVal -> IO ()
+
+-- | Fires once after the camera stops moving (including any inertia) -
+-- good for "refetch once the user has settled on a new view," as opposed
+-- to firing continuously while panning\/zooming.
+onCameraMoveEnd :: Viewer -> IO () -> IO ()
+onCameraMoveEnd (Viewer v) cb = do
+  cbVal <- js_wrapNullaryCallback cb
+  js_onCameraMoveEnd v cbVal
 -----------------------------------------------------------------------------

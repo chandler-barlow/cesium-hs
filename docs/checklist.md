@@ -36,15 +36,30 @@ record-update syntax (see `app/Main.hs`).
 
 ## Demo: live public flights
 
-`cesium-hello-globe` is now, deliberately, *just* the flights demo - a
-single query centered near the geographic center of the contiguous US
-(39.5, -98.35) at a 1500nm radius, which in testing directly against
-adsb.lol covers essentially the whole country in one call (~1450-1500
-aircraft; going to 2000nm only added a couple dozen more). Earlier
+`cesium-hello-globe` is now, deliberately, *just* the flights demo. Earlier
 London/Tokyo/Paris test markers were removed as unrelated clutter once the
 demo had a real focus - a stress test of well over a thousand entities,
 refreshed on a timer, from real external JSON, rather than a handful of
 static pins.
+
+- [x] The query is bounded by whatever's actually visible on screen
+      (`Cesium.computeViewRectangleDegrees`, new), not a fixed area -
+      zoomed out, that's ~1500nm (essentially the whole US, tested by hand
+      against adsb.lol directly: 2000nm only adds a couple dozen aircraft
+      over 1500nm, so 1500 is the hard cap on computed radius too);
+      zoomed into a state, more like ~150nm; zoomed into one airport,
+      clamped up to a 50nm floor rather than an unrealistically tiny
+      query. Verified the radius math against representative view sizes
+      by hand (a python cross-check of the same haversine formula) before
+      trusting it in the real code.
+- [x] `Cesium.Viewer.onCameraMoveEnd` (new, via the same `"wrapper"`
+      callback bridge as clicks/tileset events): refetches right after the
+      camera settles from a pan/zoom, not just on the periodic timer - so
+      zooming into a new area shows its traffic immediately rather than
+      after a wait. Shares a 2s wall-clock cooldown (`Cesium.Browser.nowMs`,
+      new) with the periodic poll, so a burst of camera movement (or
+      moveEnd lining up with a timer tick) can't fire requests faster than
+      that regardless of which trigger caused it.
 
 - [x] `Cesium.Browser`: `fetchJson` (async `fetch` + `JSON.parse`, in one
       JSFFI call) and `setInterval` (polling) - both generic Web API
@@ -81,13 +96,21 @@ static pins.
       "LOOP_STOP"` - harmless when the clock was just decorative, but
       actively wrong once aircraft positions are interpolated against it.
       Now `multiplier = 1`, `clockRange = "UNBOUNDED"`.
-- [x] Each aircraft renders as a small icon (`Cesium.Simple.BillboardOptions`),
-      not a plain dot - a self-contained inline SVG data URI (no network
-      dependency for the icon itself), rotated per-aircraft via
+- [x] Each aircraft renders as a small top-down airplane silhouette
+      (`Cesium.Simple.BillboardOptions`), not a plain dot - a
+      self-contained inline SVG data URI (no network dependency for the
+      icon itself; a handful of simple 4-point quadrilaterals rather than
+      curves, so the shape was easy to get right by hand without a
+      browser to preview it in), rotated per-aircraft via
       `billboard.rotation` to match its reported compass track
       (`rotation = negate (toRadians track)` - Cesium's billboard rotation
       is counterclockwise from upright, compass bearing is clockwise from
       north, hence the negation)
+- [x] `Cesium.Math.NearFarScalar` (new), wired into `Cesium.Options`'
+      generic `ToOptionValue` machinery same as `Color`/`Cartesian3` -
+      used for `BillboardOptions`' `scaleByDistance`, so icons stay subtle
+      from a zoomed-out view but grow up to 3x bigger as the camera gets
+      within ~1km of one
 
 **Why there's a proxy at all**: the free ADS-B aggregators (adsb.lol,
 airplanes.live, adsb.one, OpenSky) are built for server-side consumption,

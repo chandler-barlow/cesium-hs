@@ -7,6 +7,7 @@
 module Cesium.Browser
   ( fetchJson
   , setInterval
+  , nowMs
   ) where
 -----------------------------------------------------------------------------
 import GHC.Wasm.Prim
@@ -39,4 +40,10 @@ setInterval :: IO () -> Double -> IO ()
 setInterval action intervalMs = do
   cb <- js_wrapIntervalCallback action
   js_setInterval cb intervalMs
+-----------------------------------------------------------------------------
+-- | Milliseconds since the Unix epoch - for simple wall-clock cooldowns
+-- (e.g. "don't refetch more than once every N seconds even if several
+-- triggers fire close together").
+foreign import javascript unsafe "return Date.now()"
+  nowMs :: IO Double
 -----------------------------------------------------------------------------

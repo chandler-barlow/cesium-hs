@@ -30,6 +30,8 @@ module Cesium.Core
   , hasNumProp
   , getPropNumOr
   , getPropStrOr
+  , isDefined
+  , unNum
   ) where
 -----------------------------------------------------------------------------
 import GHC.Wasm.Prim
@@ -123,4 +125,16 @@ foreign import javascript unsafe
 foreign import javascript unsafe
   "return (typeof $1[$2] === 'string') ? $1[$2] : $3"
   getPropStrOr :: JSVal -> JSString -> JSString -> IO JSString
+-----------------------------------------------------------------------------
+-- | Is this 'JSVal' anything other than JS @undefined@\/@null@? Some
+-- Cesium calls return one of those instead of a real value (e.g.
+-- @camera.computeViewRectangle@, when the camera isn't looking at the
+-- globe at all).
+foreign import javascript unsafe "return $1 !== undefined && $1 !== null"
+  isDefined :: JSVal -> IO Bool
+-----------------------------------------------------------------------------
+-- | Unbox a 'JSVal' already known to hold a JS number - the reverse of
+-- 'num'.
+foreign import javascript unsafe "return $1"
+  unNum :: JSVal -> IO Double
 -----------------------------------------------------------------------------
