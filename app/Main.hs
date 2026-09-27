@@ -1,8 +1,7 @@
 -----------------------------------------------------------------------------
-{-# LANGUAGE CPP                   #-}
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE LambdaCase            #-}
-{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE CPP               #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE OverloadedStrings #-}
 -----------------------------------------------------------------------------
 module Main where
 -----------------------------------------------------------------------------
@@ -54,54 +53,23 @@ initCesium = do
     , Simple.animation = Just False
     }
 
-  -- Phase 2: Cartesian3 + Color, Phase 3: setView (straight down, no animation)
-  nyc <- Cesium.cartesian3FromDegrees (-74.0060) 40.7128 15000000
-  Cesium.setView viewer nyc 0 (Cesium.toRadians (-90)) 0
+  -- Straight down over the geographic center of the US, high enough to
+  -- see the whole country at once (see Flights.hs for why that center)
+  usView <- Cesium.cartesian3FromDegrees (-98.35) 39.5 6000000
+  Cesium.setView viewer usView 0 (Cesium.toRadians (-90)) 0
   bg <- Cesium.colorFromCss "#000010"
   Cesium.setBackgroundColor viewer bg
 
-  -- Phase 4: a point + label entity to click on
-  london <- Cesium.cartesian3FromDegrees (-0.1276) 51.5074 0
-  red <- Cesium.colorNamed "RED"
-  _ <- Cesium.addPointEntity viewer london 12 red
-  _ <- Cesium.addLabelEntity viewer london "London"
-
-  -- Cesium.Simple: the same kind of marker, but through the generic
-  -- ToOptions machinery, with more fields than the raw addPointEntity/
-  -- addLabelEntity expose (outlineColor, outlineWidth, fillColor, ...)
-  tokyo <- Cesium.cartesian3FromDegrees 139.6917 35.6895 0
-  yellow <- Cesium.colorNamed "YELLOW"
-  black <- Cesium.colorNamed "BLACK"
-  _ <- Simple.addPointEntity viewer tokyo Simple.defaultPointOptions
-    { Simple.pixelSize = Just 14
-    , Simple.color = Just yellow
-    , Simple.outlineColor = Just black
-    , Simple.outlineWidth = Just 2
-    }
-  _ <- Simple.addLabelEntity viewer tokyo Simple.defaultLabelOptions
-    { Simple.text = Just "Tokyo"
-    , Simple.fillColor = Just yellow
-    }
-
-  -- Phase 3 + 4: click handling via the "wrapper" JSFFI callback bridge,
-  -- picking whatever entity (if any) is under the cursor
+  -- Picking (click an aircraft to log it to the console) - kept as a
+  -- minimal interaction; no longer flies anywhere on click
   handler <- Cesium.newScreenSpaceEventHandler viewer
   Cesium.onLeftClick handler $ \ev -> do
     screenPos <- Cesium.getProp ev (Cesium.str "position")
     picked <- Cesium.pick viewer screenPos
     Cesium.consoleLog picked
-    londonDest <- Cesium.cartesian3FromDegrees (-0.1276) 51.5074 5000000
-    Cesium.flyTo viewer londonDest
 
-  -- Phase 5: an inline GeoJSON point, loaded through a genuinely async
-  -- Cesium call (exercises the Phase 0 "Promise bridging" item)
-  geojson <- parisGeoJson
-  geojsonOpts <- Cesium.newObject
-  dataSource <- Cesium.loadGeoJsonData geojson geojsonOpts
-  _ <- Cesium.addDataSource viewer dataSource
-
-  -- Phase 6: an extra OSM tile layer at half alpha, over an explicit
-  -- (procedural, no-network) terrain provider
+  -- An OSM tile layer at half alpha, over an explicit (procedural,
+  -- no-network) terrain provider
   imageryOpts <- Cesium.newObject
   Cesium.setPropStr imageryOpts (Cesium.str "url") (Cesium.str "https://tile.openstreetmap.org/{z}/{x}/{y}.png")
   provider <- Cesium.urlTemplateImageryProvider imageryOpts
@@ -111,14 +79,14 @@ initCesium = do
   terrain <- Cesium.ellipsoidTerrainProvider
   Cesium.setTerrainProvider viewer terrain
 
-  -- Phase 9: scene/globe/clock toggles
+  -- Scene/globe/clock toggles
   configureSceneAndClock viewer
 
-  -- Live public flights near NYC (where the camera already is), via the
-  -- local adsb-proxy - see docs/checklist.md and README for how to run it
-  Flights.pollFlights viewer (Flights.FlightQuery 40.7128 (-74.0060) 250)
+  -- Live flights across the whole US, via the local adsb-proxy - see
+  -- docs/checklist.md and README for how to run it
+  Flights.pollUSFlights viewer
 -----------------------------------------------------------------------------
--- | Phase 9: a scene/globe/clock configuration pass, kept separate from
+-- | A scene/globe/clock configuration pass, kept separate from
 -- 'initCesium' just for readability.
 configureSceneAndClock :: Cesium.Viewer -> IO ()
 configureSceneAndClock viewer = do
@@ -136,37 +104,6 @@ configureSceneAndClock viewer = do
   Cesium.setClockShouldAnimate viewer True
   Cesium.setClockMultiplier viewer 60
   Cesium.setClockRange viewer "LOOP_STOP"
------------------------------------------------------------------------------
--- | A minimal GeoJSON @FeatureCollection@ (one @Point@), built directly
--- with "Cesium.Core"'s object\/array helpers - no network fetch needed to
--- demonstrate 'Cesium.loadGeoJsonData'.
-parisGeoJson :: IO Cesium.JSVal
-parisGeoJson = do
-  lon <- Cesium.num 2.3522
-  lat <- Cesium.num 48.8566
-  coords <- Cesium.newArray
-  Cesium.arrayPush coords lon
-  Cesium.arrayPush coords lat
-
-  geometry <- Cesium.newObject
-  Cesium.setPropStr geometry (Cesium.str "type") (Cesium.str "Point")
-  Cesium.setProp geometry (Cesium.str "coordinates") coords
-
-  properties <- Cesium.newObject
-  Cesium.setPropStr properties (Cesium.str "name") (Cesium.str "Paris")
-
-  feature <- Cesium.newObject
-  Cesium.setPropStr feature (Cesium.str "type") (Cesium.str "Feature")
-  Cesium.setProp feature (Cesium.str "geometry") geometry
-  Cesium.setProp feature (Cesium.str "properties") properties
-
-  features <- Cesium.newArray
-  Cesium.arrayPush features feature
-
-  fc <- Cesium.newObject
-  Cesium.setPropStr fc (Cesium.str "type") (Cesium.str "FeatureCollection")
-  Cesium.setProp fc (Cesium.str "features") features
-  pure fc
 -----------------------------------------------------------------------------
 viewModel :: Model -> View context props Model Action
 viewModel _ =

@@ -23,10 +23,10 @@ nix develop .#wasm --command bash -c 'make && make serve'
 ```
 
 Then open the URL `http-server` prints (typically `http://127.0.0.1:8080`).
-You should see a globe over New York, an OSM tile overlay, marker pins at
-London/Tokyo/Paris (click one - it flies the camera and logs the picked
-entity to the browser console), and - if the flight proxy is running (see
-below) - a few hundred live aircraft.
+You should see a globe centered over the continental US, an OSM tile
+overlay, and - if the flight proxy is running (see below) - upward of a
+thousand live aircraft as little icons, oriented to their heading. Click
+one to log the picked entity to the browser console.
 
 For faster iteration, `make repl` gives you a browser-connected GHCi
 session instead of a full rebuild each time:
@@ -53,10 +53,11 @@ nix develop --command cabal run adsb-proxy
 ```
 
 It listens on `http://localhost:8790`. With both `make serve` and the
-proxy running, reload the page and aircraft near NYC should appear within
-a few seconds, refreshing every 15s. Without the proxy running, the demo
-still works - you'll just see a "flight poll failed" message in the
-browser console instead of aircraft.
+proxy running, reload the page and aircraft across the whole US should
+appear within a few seconds (typically 1000-1500 of them), refreshing
+every 15s. Without the proxy running, the demo still works - you'll just
+see a "flight poll failed" message in the browser console instead of
+aircraft.
 
 ## Project layout
 

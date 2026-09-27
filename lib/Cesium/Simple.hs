@@ -23,10 +23,10 @@
 -- >   , Simple.animation = Just False
 -- >   }
 --
--- Coverage so far: 'ViewerOptions', 'PointOptions', 'LabelOptions'. More
--- options records get added the same way, as something needs them - the
--- pattern (record + @deriving Generic@ + empty @ToOptions@ instance +
--- a default value) is the same every time.
+-- Coverage so far: 'ViewerOptions', 'PointOptions', 'LabelOptions',
+-- 'BillboardOptions'. More options records get added the same way, as
+-- something needs them - the pattern (record + @deriving Generic@ + empty
+-- @ToOptions@ instance + a default value) is the same every time.
 -----------------------------------------------------------------------------
 module Cesium.Simple
   ( ViewerOptions(..)
@@ -38,6 +38,9 @@ module Cesium.Simple
   , LabelOptions(..)
   , defaultLabelOptions
   , addLabelEntity
+  , BillboardOptions(..)
+  , defaultBillboardOptions
+  , addBillboardEntity
   ) where
 -----------------------------------------------------------------------------
 import GHC.Generics (Generic)
@@ -146,5 +149,35 @@ addLabelEntity v pos opts = do
   entityOpts <- newObject
   setProp entityOpts (str "position") (unCartesian3 pos)
   setProp entityOpts (str "label") label
+  Entity.addEntity v entityOpts
+-----------------------------------------------------------------------------
+-- | The common subset of @BillboardGraphics@ - see "Cesium.Entity" for
+-- the raw, 2-field version this replaces. @rotation@ is screen-space,
+-- radians, counterclockwise from image-upright - to align an
+-- upward-pointing icon to a compass track (clockwise from north), use
+-- @negate (Cesium.toRadians track)@.
+data BillboardOptions = BillboardOptions
+  { image :: Maybe String
+  , rotation :: Maybe Double
+  , scale :: Maybe Double
+  , color :: Maybe Color
+  } deriving (Generic)
+
+instance ToOptions BillboardOptions
+
+defaultBillboardOptions :: BillboardOptions
+defaultBillboardOptions = BillboardOptions
+  { image = Nothing
+  , rotation = Nothing
+  , scale = Nothing
+  , color = Nothing
+  }
+
+addBillboardEntity :: Viewer -> Cartesian3 -> BillboardOptions -> IO Entity
+addBillboardEntity v pos opts = do
+  billboard <- toOptions opts
+  entityOpts <- newObject
+  setProp entityOpts (str "position") (unCartesian3 pos)
+  setProp entityOpts (str "billboard") billboard
   Entity.addEntity v entityOpts
 -----------------------------------------------------------------------------

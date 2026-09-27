@@ -20,8 +20,9 @@ default applies), derive `Generic`, write an empty `instance ToOptions
 MyRecord` - done. `Cesium.Simple` is the first consumer of that machinery:
 
 - [x] `ViewerOptions` (the boolean UI-widget toggles) + `newViewer`
-- [x] `PointOptions` (`pixelSize`/`color`/`outlineColor`/`outlineWidth`/`show`) + `addPointEntity`
-- [x] `LabelOptions` (`text`/`font`/`fillColor`/`outlineColor`/`showBackground`/`scale`) + `addLabelEntity`
+- [ ] `PointOptions` (`pixelSize`/`color`/`outlineColor`/`outlineWidth`/`show`) + `addPointEntity` - implemented, previously exercised via a Tokyo marker that's since been removed in favor of a flights-only example; not currently exercised
+- [ ] `LabelOptions` (`text`/`font`/`fillColor`/`outlineColor`/`showBackground`/`scale`) + `addLabelEntity` - same as `PointOptions` above
+- [x] `BillboardOptions` (`image`/`rotation`/`scale`/`color`) + `addBillboardEntity` - exercised (every aircraft icon in the flights demo)
 - [ ] Everything else - same pattern (record + `deriving Generic` + empty instance + a `defaultXOptions` value), added as something needs it
 
 Deliberately **not** re-exported from the `Cesium` umbrella module - import
@@ -35,8 +36,15 @@ record-update syntax (see `app/Main.hs`).
 
 ## Demo: live public flights
 
-`cesium-hello-globe` shows live aircraft near NYC, as a stress test of the
-library (hundreds of entities, refreshed on a timer, real external JSON).
+`cesium-hello-globe` is now, deliberately, *just* the flights demo - a
+single query centered near the geographic center of the contiguous US
+(39.5, -98.35) at a 1500nm radius, which in testing directly against
+adsb.lol covers essentially the whole country in one call (~1450-1500
+aircraft; going to 2000nm only added a couple dozen more). Earlier
+London/Tokyo/Paris test markers were removed as unrelated clutter once the
+demo had a real focus - a stress test of well over a thousand entities,
+refreshed on a timer, from real external JSON, rather than a handful of
+static pins.
 
 - [x] `Cesium.Browser`: `fetchJson` (async `fetch` + `JSON.parse`, in one
       JSFFI call) and `setInterval` (polling) - both generic Web API
@@ -50,6 +58,13 @@ library (hundreds of entities, refreshed on a timer, real external JSON).
 - [x] `app/Flights.hs`: polls every 15s, clears and rebuilds the entity
       set each time (no position smoothing/diffing yet - a small pop each
       refresh, not a smooth glide)
+- [x] Each aircraft renders as a small icon (`Cesium.Simple.BillboardOptions`),
+      not a plain dot - a self-contained inline SVG data URI (no network
+      dependency for the icon itself), rotated per-aircraft via
+      `billboard.rotation` to match its reported compass track
+      (`rotation = negate (toRadians track)` - Cesium's billboard rotation
+      is counterclockwise from upright, compass bearing is clockwise from
+      north, hence the negation)
 
 **Why there's a proxy at all**: the free ADS-B aggregators (adsb.lol,
 airplanes.live, adsb.one, OpenSky) are built for server-side consumption,
@@ -66,11 +81,12 @@ plus the project's own `flake.nix` now layers `pkgs.zlib` onto it
 isn't in the upstream devShell by default).
 
 Run it with `make proxy` (or `nix develop --command cabal run adsb-proxy`)
-in its own terminal, alongside `make serve`. Verified end-to-end: a real
-request against a locally-running proxy returned 320 real aircraft near
-NYC with the correct CORS header, and the proxy survived the request
-without crashing (an earlier attempt crashed on first request - Warp's
-timer manager needs `-threaded`, now in `adsb-proxy`'s `ghc-options`).
+in its own terminal, alongside `make serve`. Verified end-to-end multiple
+times: a real request against a locally-running proxy, with the actual
+US-wide query the app sends, returned 1489 real aircraft with the correct
+CORS header, and the proxy survived without crashing (an earlier attempt
+crashed on first request - Warp's timer manager needs `-threaded`, now in
+`adsb-proxy`'s `ghc-options`).
 
 ## Phase 0 - FFI plumbing
 
@@ -78,14 +94,15 @@ timer manager needs `-threaded`, now in `adsb-proxy`'s `ghc-options`).
 - [x] Div-mounting escape hatch (`viewModel` renders a stable childless div; Cesium owns its subtree)
 - [x] Callback bridging (`"wrapper"` dynamic exports) for JS → Haskell event callbacks - `Cesium.Events.onLeftClick`
 - [ ] Wire a Cesium-originated callback back into a Miso component's own `Action`/update loop (`withSink`/`issue`) - currently callbacks just run plain `IO` directly (see `Cesium.Events`)
-- [x] Promise bridging proven for an async Cesium call (`safe` import + `await` in the JS snippet) - `Cesium.DataSource.loadGeoJsonData`/`addDataSource`, exercised
+- [x] Promise bridging proven for an async Cesium call (`safe` import + `await` in the JS snippet) - originally via `Cesium.DataSource.loadGeoJsonData`/`addDataSource` (since removed from the demo, see Phase 5 below); now via `Cesium.Browser.fetchJson`, exercised every 15s by the flights demo
 - [ ] Cleanup on component unmount (`destroyViewer` actually wired to `unmount`)
 - [ ] JS exception → Haskell error handling story at the FFI boundary
 
 ## Phase 1 - MVP: hello globe
 
-- [x] `Cesium.Viewer`: `newViewer`, `destroyViewer`
-- [x] `Cesium.Viewer`: `flyTo`
+- [x] `Cesium.Viewer`: `newViewer` - exercised
+- [ ] `Cesium.Viewer`: `destroyViewer` - implemented, nothing unmounts the viewer yet so never called
+- [ ] `Cesium.Viewer`: `flyTo` - implemented, previously exercised via a click-to-London demo that's since been removed; see Phase 3
 - [ ] Verified end-to-end in a real browser (not yet run - first thing to check with `make repl`)
 
 ## Phase 2 - Core math types
@@ -104,18 +121,18 @@ timer manager needs `-threaded`, now in `adsb-proxy`'s `ghc-options`).
 ## Phase 3 - Camera & interaction
 
 - [x] `Camera`: `setView` (position + heading/pitch/roll) - exercised on load
-- [x] `Camera`: `flyTo` (Phase 1, since refactored to take a `Cartesian3`) - exercised on click
+- [ ] `Camera`: `flyTo` (Phase 1, since refactored to take a `Cartesian3`) - implemented, previously exercised via a click-to-London demo that's since been removed; not currently exercised
 - [ ] `Camera`: `flyToBoundingSphere`, `lookAt`, `position` getter
-- [x] `ScreenSpaceEventHandler` + `LEFT_CLICK` → Haskell callback - `Cesium.Events.onLeftClick`, exercised (flies to London, logs the raw event)
+- [x] `ScreenSpaceEventHandler` + `LEFT_CLICK` → Haskell callback - `Cesium.Events.onLeftClick`, exercised (picks whatever's under the cursor and logs it to console)
 - [ ] Remaining `ScreenSpaceEventType`s (mousemove, wheel, right-click, double-click)
 - [ ] `ScreenSpaceCameraController` options (enable/disable rotate/zoom/tilt)
 
 ## Phase 4 - Entity API
 
-- [x] `Entity` + `EntityCollection` (`addEntity`/`removeEntity`/`removeAllEntities`)
-- [x] `PointGraphics` (`addPointEntity`) - exercised (London marker)
-- [x] `LabelGraphics` (`addLabelEntity`) - exercised (London marker)
-- [x] `BillboardGraphics` (`addBillboardEntity`) - implemented, not yet exercised
+- [x] `Entity` + `EntityCollection` (`addEntity`/`removeEntity`/`removeAllEntities`) - exercised (add/remove every poll cycle in the flights demo)
+- [ ] `PointGraphics` (`addPointEntity`) - implemented, previously exercised via a London marker that's since been removed; not currently exercised
+- [ ] `LabelGraphics` (`addLabelEntity`) - same as `PointGraphics` above
+- [ ] `BillboardGraphics` (`addBillboardEntity`, the raw 2-field version) - implemented, not yet exercised (the flights demo uses `Cesium.Simple.addBillboardEntity` instead, which *is* exercised - see the Cesium.Simple section above)
 - [x] `PolylineGraphics` (`addPolylineEntity`) - implemented, not yet exercised
 - [x] `PolygonGraphics` (`addPolygonEntity`) - implemented, not yet exercised
 - [ ] `RectangleGraphics`, `EllipseGraphics` - skipped for now, same pattern as the above when needed
@@ -124,11 +141,11 @@ timer manager needs `-threaded`, now in `adsb-proxy`'s `ghc-options`).
 
 ## Phase 5 - Data sources
 
-- [x] `GeoJsonDataSource.load` (`loadGeoJsonUrl`, `loadGeoJsonData`) - `loadGeoJsonData` exercised (inline Paris point, no network fetch)
+- [ ] `GeoJsonDataSource.load` (`loadGeoJsonUrl`, `loadGeoJsonData`) - implemented, previously exercised via an inline Paris point that's since been removed; not currently exercised
 - [x] `KmlDataSource.load` (`loadKmlUrl`) - implemented, not yet exercised
 - [x] `CzmlDataSource.load` (`loadCzmlUrl`) - implemented, not yet exercised
 - [x] `CustomDataSource` (`newCustomDataSource`) - construction only; adding entities to it isn't wired up yet (see note in `Cesium.DataSource`)
-- [x] `DataSourceCollection` (`addDataSource`/`removeDataSource`/`removeAllDataSources`) - `addDataSource` exercised
+- [ ] `DataSourceCollection` (`addDataSource`/`removeDataSource`/`removeAllDataSources`) - implemented, previously exercised via `addDataSource`; not currently exercised (nothing in the demo adds a data source any more - the aircraft are plain entities, not a `DataSource`)
 
 ## Phase 6 - Imagery & terrain
 
