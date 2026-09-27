@@ -3,9 +3,13 @@
 -----------------------------------------------------------------------------
 module Cesium
   ( module Cesium.Core
+  , module Cesium.Math
   , module Cesium.Viewer
+  , module Cesium.Events
   ) where
 -----------------------------------------------------------------------------
 import Cesium.Core
+import Cesium.Math
 import Cesium.Viewer
+import Cesium.Events
 -----------------------------------------------------------------------------

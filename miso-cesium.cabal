@@ -27,7 +27,9 @@ library
   exposed-modules:
     Cesium
     Cesium.Core
+    Cesium.Math
     Cesium.Viewer
+    Cesium.Events
   hs-source-dirs:
     lib
   default-language:

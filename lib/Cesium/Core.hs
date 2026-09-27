@@ -18,6 +18,7 @@ module Cesium.Core
   , setPropBool
   , getProp
   , global
+  , consoleLog
   ) where
 -----------------------------------------------------------------------------
 import GHC.Wasm.Prim
@@ -52,4 +53,9 @@ foreign import javascript unsafe "return $1[$2]"
 -- | Look up a name on @globalThis@, e.g. @global (str \"Cesium\")@.
 foreign import javascript unsafe "return globalThis[$1]"
   global :: JSString -> IO JSVal
+-----------------------------------------------------------------------------
+-- | Handy for poking at an opaque 'JSVal' (e.g. an event object) from the
+-- browser devtools console while wiring up a new binding.
+foreign import javascript unsafe "console.log($1)"
+  consoleLog :: JSVal -> IO ()
 -----------------------------------------------------------------------------

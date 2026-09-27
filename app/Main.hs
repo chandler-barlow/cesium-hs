@@ -45,7 +45,19 @@ initCesium :: IO ()
 initCesium = do
   opts <- Cesium.newObject
   viewer <- Cesium.newViewer (Cesium.str "cesium-container") opts
-  Cesium.flyTo viewer (-74.0060) 40.7128 15000000
+
+  -- Phase 2: Cartesian3 + Color, Phase 3: setView (straight down, no animation)
+  nyc <- Cesium.cartesian3FromDegrees (-74.0060) 40.7128 15000000
+  Cesium.setView viewer nyc 0 (Cesium.toRadians (-90)) 0
+  bg <- Cesium.colorFromCss "#000010"
+  Cesium.setBackgroundColor viewer bg
+
+  -- Phase 3: click handling via the "wrapper" JSFFI callback bridge
+  handler <- Cesium.newScreenSpaceEventHandler viewer
+  Cesium.onLeftClick handler $ \ev -> do
+    Cesium.consoleLog ev
+    london <- Cesium.cartesian3FromDegrees (-0.1276) 51.5074 5000000
+    Cesium.flyTo viewer london
 -----------------------------------------------------------------------------
 viewModel :: Model -> View context props Model Action
 viewModel _ =

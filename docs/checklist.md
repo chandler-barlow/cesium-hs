@@ -12,7 +12,8 @@ type-checked FFI import that's never been called is not verified.
 
 - [x] `Cesium.Core`: `newObject`/`setProp*`/`getProp`/`global` helpers over `JSVal`
 - [x] Div-mounting escape hatch (`viewModel` renders a stable childless div; Cesium owns its subtree)
-- [ ] Callback bridging (`"wrapper"` dynamic exports) for JS → Haskell event callbacks
+- [x] Callback bridging (`"wrapper"` dynamic exports) for JS → Haskell event callbacks - `Cesium.Events.onLeftClick`
+- [ ] Wire a Cesium-originated callback back into a Miso component's own `Action`/update loop (`withSink`/`issue`) - currently callbacks just run plain `IO` directly (see `Cesium.Events`)
 - [ ] Promise bridging proven for an async Cesium call (`safe` import + `await` in the JS snippet)
 - [ ] Cleanup on component unmount (`destroyViewer` actually wired to `unmount`)
 - [ ] JS exception → Haskell error handling story at the FFI boundary
@@ -25,17 +26,24 @@ type-checked FFI import that's never been called is not verified.
 
 ## Phase 2 - Core math types
 
-- [ ] `Cartesian2`, `Cartesian3`, `Cartesian4`
-- [ ] `Cartographic` + `fromDegrees`/`fromRadians`
-- [ ] `Color` (named colors + `fromCssColorString`)
-- [ ] `Matrix3`, `Matrix4`, `Quaternion`, `Transforms`
-- [ ] `Rectangle`
-- [ ] `JulianDate`
+- [x] `Cartesian3` (`fromDegrees`/`fromRadians`) - exercised via `flyTo`/`setView`
+- [ ] `Cartesian2`, `Cartesian4` - skipped for now, not yet needed by anything above
+- [x] `Cartographic` (`fromDegrees`/`fromRadians`) - implemented, not yet exercised
+- [x] `Color` (`fromCssColorString`, named colors) - exercised via `setBackgroundColor`
+- [x] `Rectangle` (`fromDegrees`) - implemented, not yet exercised
+- [ ] `Matrix3` - skipped, rarely constructed directly by user code; revisit if a future phase needs it
+- [x] `Matrix4` (`IDENTITY` only) - implemented, not yet exercised
+- [x] `Quaternion` (`fromAxisAngle`) - implemented, not yet exercised
+- [x] `JulianDate` (`now`) - implemented, not yet exercised
+- [ ] `Transforms` namespace - not started
 
 ## Phase 3 - Camera & interaction
 
-- [ ] `Camera`: `position`, heading/pitch/roll, `flyToBoundingSphere`, `lookAt`, `setView`
-- [ ] `ScreenSpaceEventHandler` + `ScreenSpaceEventType` (click/mousemove/wheel) → Haskell callbacks
+- [x] `Camera`: `setView` (position + heading/pitch/roll) - exercised on load
+- [x] `Camera`: `flyTo` (Phase 1, since refactored to take a `Cartesian3`) - exercised on click
+- [ ] `Camera`: `flyToBoundingSphere`, `lookAt`, `position` getter
+- [x] `ScreenSpaceEventHandler` + `LEFT_CLICK` → Haskell callback - `Cesium.Events.onLeftClick`, exercised (flies to London, logs the raw event)
+- [ ] Remaining `ScreenSpaceEventType`s (mousemove, wheel, right-click, double-click)
 - [ ] `ScreenSpaceCameraController` options (enable/disable rotate/zoom/tilt)
 
 ## Phase 4 - Entity API
