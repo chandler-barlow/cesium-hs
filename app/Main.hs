@@ -52,12 +52,21 @@ initCesium = do
   bg <- Cesium.colorFromCss "#000010"
   Cesium.setBackgroundColor viewer bg
 
-  -- Phase 3: click handling via the "wrapper" JSFFI callback bridge
+  -- Phase 4: a point + label entity to click on
+  london <- Cesium.cartesian3FromDegrees (-0.1276) 51.5074 0
+  red <- Cesium.colorNamed "RED"
+  _ <- Cesium.addPointEntity viewer london 12 red
+  _ <- Cesium.addLabelEntity viewer london "London"
+
+  -- Phase 3 + 4: click handling via the "wrapper" JSFFI callback bridge,
+  -- picking whatever entity (if any) is under the cursor
   handler <- Cesium.newScreenSpaceEventHandler viewer
   Cesium.onLeftClick handler $ \ev -> do
-    Cesium.consoleLog ev
-    london <- Cesium.cartesian3FromDegrees (-0.1276) 51.5074 5000000
-    Cesium.flyTo viewer london
+    screenPos <- Cesium.getProp ev (Cesium.str "position")
+    picked <- Cesium.pick viewer screenPos
+    Cesium.consoleLog picked
+    londonDest <- Cesium.cartesian3FromDegrees (-0.1276) 51.5074 5000000
+    Cesium.flyTo viewer londonDest
 -----------------------------------------------------------------------------
 viewModel :: Model -> View context props Model Action
 viewModel _ =

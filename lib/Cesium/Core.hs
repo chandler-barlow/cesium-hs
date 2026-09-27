@@ -19,6 +19,8 @@ module Cesium.Core
   , getProp
   , global
   , consoleLog
+  , newArray
+  , arrayPush
   ) where
 -----------------------------------------------------------------------------
 import GHC.Wasm.Prim
@@ -58,4 +60,12 @@ foreign import javascript unsafe "return globalThis[$1]"
 -- browser devtools console while wiring up a new binding.
 foreign import javascript unsafe "console.log($1)"
   consoleLog :: JSVal -> IO ()
+-----------------------------------------------------------------------------
+-- | A fresh, empty JS array - Cesium accepts plain arrays for e.g. a
+-- polyline's @positions@ or a polygon's @hierarchy@.
+foreign import javascript unsafe "return []"
+  newArray :: IO JSVal
+
+foreign import javascript unsafe "$1.push($2)"
+  arrayPush :: JSVal -> JSVal -> IO ()
 -----------------------------------------------------------------------------

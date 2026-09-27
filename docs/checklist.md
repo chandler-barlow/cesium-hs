@@ -48,11 +48,15 @@ type-checked FFI import that's never been called is not verified.
 
 ## Phase 4 - Entity API
 
-- [ ] `Entity` + `EntityCollection` (`viewer.entities.add`/`remove`)
-- [ ] `PointGraphics`, `LabelGraphics`, `BillboardGraphics`
-- [ ] `PolylineGraphics`, `PolygonGraphics`, `RectangleGraphics`, `EllipseGraphics`
-- [ ] `ModelGraphics` (glTF models)
-- [ ] Entity picking (`viewer.scene.pick`) wired back through the click callback
+- [x] `Entity` + `EntityCollection` (`addEntity`/`removeEntity`/`removeAllEntities`)
+- [x] `PointGraphics` (`addPointEntity`) - exercised (London marker)
+- [x] `LabelGraphics` (`addLabelEntity`) - exercised (London marker)
+- [x] `BillboardGraphics` (`addBillboardEntity`) - implemented, not yet exercised
+- [x] `PolylineGraphics` (`addPolylineEntity`) - implemented, not yet exercised
+- [x] `PolygonGraphics` (`addPolygonEntity`) - implemented, not yet exercised
+- [ ] `RectangleGraphics`, `EllipseGraphics` - skipped for now, same pattern as the above when needed
+- [ ] `ModelGraphics` (glTF models) - skipped for now
+- [x] Entity picking (`viewer.scene.pick`, `Cesium.Viewer.pick`) - exercised in the click callback (logs the picked object, if any)
 
 ## Phase 5 - Data sources
 

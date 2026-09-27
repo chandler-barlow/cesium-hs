@@ -12,6 +12,7 @@ module Cesium.Viewer
   , setBackgroundColor
   , flyTo
   , setView
+  , pick
   ) where
 -----------------------------------------------------------------------------
 import GHC.Wasm.Prim
@@ -79,4 +80,15 @@ setView (Viewer v) dest heading pitch roll = do
   setProp opts (str "destination") (unCartesian3 dest)
   setProp opts (str "orientation") orientation
   js_setView v opts
+-----------------------------------------------------------------------------
+foreign import javascript unsafe "return $1.scene.pick($2)"
+  js_pick :: JSVal -> JSVal -> IO JSVal
+
+-- | Pick whatever's drawn at a window (screen-space) position - the
+-- @position@ field of a "Cesium.Events" click callback's event object.
+-- Returns an opaque "picked object" (or a JS @undefined@\/@null@ 'JSVal'
+-- if nothing was hit); if something was hit, its @.id@ property is the
+-- 'Cesium.Entity.Entity' that owns it - pull it out with 'Cesium.Core.getProp'.
+pick :: Viewer -> JSVal -> IO JSVal
+pick (Viewer v) windowPosition = js_pick v windowPosition
 -----------------------------------------------------------------------------
