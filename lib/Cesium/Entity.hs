@@ -24,6 +24,7 @@ module Cesium.Entity
   , addBillboardEntity
   , addPolylineEntity
   , addPolygonEntity
+  , setBillboardRotation
   ) where
 -----------------------------------------------------------------------------
 import GHC.Wasm.Prim
@@ -119,4 +120,15 @@ addPolygonEntity v positions color = do
   opts <- newObject
   setProp opts (str "polygon") polygon
   addEntity v opts
+-----------------------------------------------------------------------------
+foreign import javascript unsafe "$1.billboard.rotation = $2"
+  js_setBillboardRotation :: JSVal -> Double -> IO ()
+
+-- | Update an existing billboard entity's screen-space rotation in place
+-- (see "Cesium.Simple"'s @BillboardOptions@ for the convention) - for
+-- entities whose position is a dynamic property (e.g.
+-- "Cesium.SampledPosition") that get their heading refreshed on every
+-- poll rather than being recreated.
+setBillboardRotation :: Entity -> Double -> IO ()
+setBillboardRotation e r = js_setBillboardRotation (unEntity e) r
 -----------------------------------------------------------------------------

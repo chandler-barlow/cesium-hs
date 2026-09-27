@@ -55,7 +55,9 @@ nix develop --command cabal run adsb-proxy
 It listens on `http://localhost:8790`. With both `make serve` and the
 proxy running, reload the page and aircraft across the whole US should
 appear within a few seconds (typically 1000-1500 of them), refreshing
-every 15s. Without the proxy running, the demo still works - you'll just
+every 5s - each aircraft glides smoothly between updates (via a
+`SampledPositionProperty` per aircraft) rather than popping to its new
+position. Without the proxy running, the demo still works - you'll just
 see a "flight poll failed" message in the browser console instead of
 aircraft.
 

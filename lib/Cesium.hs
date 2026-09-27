@@ -14,6 +14,7 @@ module Cesium
   , module Cesium.Clock
   , module Cesium.Tileset
   , module Cesium.Browser
+  , module Cesium.SampledPosition
   ) where
 -----------------------------------------------------------------------------
 import Cesium.Core
@@ -28,4 +29,5 @@ import Cesium.Scene
 import Cesium.Clock
 import Cesium.Tileset
 import Cesium.Browser
+import Cesium.SampledPosition
 -----------------------------------------------------------------------------

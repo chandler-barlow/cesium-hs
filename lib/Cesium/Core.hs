@@ -11,6 +11,7 @@ module Cesium.Core
   ( JSVal
   , JSString
   , str
+  , unstr
   , newObject
   , setProp
   , setPropStr
@@ -36,6 +37,10 @@ import GHC.Wasm.Prim
 -- | Shorthand for 'toJSString'.
 str :: String -> JSString
 str = toJSString
+
+-- | Shorthand for 'fromJSString'.
+unstr :: JSString -> String
+unstr = fromJSString
 -----------------------------------------------------------------------------
 foreign import javascript unsafe "return {}"
   js_newObject :: IO JSVal

@@ -40,6 +40,7 @@ library
     Cesium.Options
     Cesium.Simple
     Cesium.Browser
+    Cesium.SampledPosition
   hs-source-dirs:
     lib
   default-language:
@@ -52,7 +53,7 @@ executable cesium-hello-globe
     Main.hs
   other-modules:
     Flights
-  build-depends: base < 5, miso, miso-cesium
+  build-depends: base < 5, containers, miso, miso-cesium
   hs-source-dirs:
     app
   default-language:

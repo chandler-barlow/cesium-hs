@@ -99,11 +99,16 @@ configureSceneAndClock viewer = do
   Cesium.setDepthTestAgainstTerrain viewer True
   Cesium.setGlobeTranslucency viewer True 0.8
 
+  -- Real-time (multiplier 1, unbounded) - not the 60x/looping demo config
+  -- from before the flights demo existed. The aircraft positions are now
+  -- SampledPositionProperty values interpolated against this clock (see
+  -- Flights.hs), so it has to actually track real time for that to mean
+  -- anything sensible.
   currentTime <- Cesium.julianDateNow
   Cesium.setClockCurrentTime viewer currentTime
   Cesium.setClockShouldAnimate viewer True
-  Cesium.setClockMultiplier viewer 60
-  Cesium.setClockRange viewer "LOOP_STOP"
+  Cesium.setClockMultiplier viewer 1
+  Cesium.setClockRange viewer "UNBOUNDED"
 -----------------------------------------------------------------------------
 viewModel :: Model -> View context props Model Action
 viewModel _ =

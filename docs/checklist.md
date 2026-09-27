@@ -55,9 +55,32 @@ static pins.
       Cesium's own API objects are; adsb.lol's `alt_baro` is sometimes the
       *string* `"ground"` instead of a number, which is exactly the kind
       of thing these guard against)
-- [x] `app/Flights.hs`: polls every 15s, clears and rebuilds the entity
-      set each time (no position smoothing/diffing yet - a small pop each
-      refresh, not a smooth glide)
+- [x] `app/Flights.hs`: polls every 5s, tracking each aircraft by its
+      `hex` (ICAO24) across polls in a `Map` - an aircraft already on the
+      globe just gets a new sample added to its existing
+      `SampledPositionProperty` (no entity churn at all); only genuinely
+      new aircraft get a new entity, and only aircraft that actually leave
+      the feed get removed. Positions glide continuously between polls
+      rather than popping.
+- [x] `Cesium.SampledPosition` (new): `SampledPositionProperty`,
+      `addSample`, `setForwardExtrapolationType`. Without the latter,
+      Cesium's default (`ExtrapolationType.NONE`) makes the entity vanish
+      the instant the clock passes the most recent sample's time - which
+      happens briefly on *every* poll, in the gap between "now" and the
+      next sample actually arriving over the network. `EXTRAPOLATE`
+      continues along the last known direction/rate through that gap
+      instead of vanishing or freezing.
+- [x] `Cesium.Entity.setBillboardRotation` (new): heading isn't
+      interpolated the way position is (would need a second
+      `SampledProperty` for the scalar `rotation` field) - it's just
+      updated directly each poll. A known asymmetry: the icon can snap to
+      a new angle mid-glide. Worth revisiting if it looks worse in
+      practice than it sounds on paper.
+- [x] Fixed the clock config left over from the pre-flights demo: it was
+      running at `multiplier = 60` (60x real time!) with `clockRange =
+      "LOOP_STOP"` - harmless when the clock was just decorative, but
+      actively wrong once aircraft positions are interpolated against it.
+      Now `multiplier = 1`, `clockRange = "UNBOUNDED"`.
 - [x] Each aircraft renders as a small icon (`Cesium.Simple.BillboardOptions`),
       not a plain dot - a self-contained inline SVG data URI (no network
       dependency for the icon itself), rotated per-aircraft via
