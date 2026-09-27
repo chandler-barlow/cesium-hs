@@ -14,7 +14,7 @@ type-checked FFI import that's never been called is not verified.
 - [x] Div-mounting escape hatch (`viewModel` renders a stable childless div; Cesium owns its subtree)
 - [x] Callback bridging (`"wrapper"` dynamic exports) for JS → Haskell event callbacks - `Cesium.Events.onLeftClick`
 - [ ] Wire a Cesium-originated callback back into a Miso component's own `Action`/update loop (`withSink`/`issue`) - currently callbacks just run plain `IO` directly (see `Cesium.Events`)
-- [ ] Promise bridging proven for an async Cesium call (`safe` import + `await` in the JS snippet)
+- [x] Promise bridging proven for an async Cesium call (`safe` import + `await` in the JS snippet) - `Cesium.DataSource.loadGeoJsonData`/`addDataSource`, exercised
 - [ ] Cleanup on component unmount (`destroyViewer` actually wired to `unmount`)
 - [ ] JS exception → Haskell error handling story at the FFI boundary
 
@@ -60,11 +60,11 @@ type-checked FFI import that's never been called is not verified.
 
 ## Phase 5 - Data sources
 
-- [ ] `GeoJsonDataSource.load`
-- [ ] `KmlDataSource.load`
-- [ ] `CzmlDataSource.load`
-- [ ] `CustomDataSource`
-- [ ] `DataSourceCollection` (`viewer.dataSources`)
+- [x] `GeoJsonDataSource.load` (`loadGeoJsonUrl`, `loadGeoJsonData`) - `loadGeoJsonData` exercised (inline Paris point, no network fetch)
+- [x] `KmlDataSource.load` (`loadKmlUrl`) - implemented, not yet exercised
+- [x] `CzmlDataSource.load` (`loadCzmlUrl`) - implemented, not yet exercised
+- [x] `CustomDataSource` (`newCustomDataSource`) - construction only; adding entities to it isn't wired up yet (see note in `Cesium.DataSource`)
+- [x] `DataSourceCollection` (`addDataSource`/`removeDataSource`/`removeAllDataSources`) - `addDataSource` exercised
 
 ## Phase 6 - Imagery & terrain
 

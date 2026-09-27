@@ -31,6 +31,7 @@ library
     Cesium.Viewer
     Cesium.Events
     Cesium.Entity
+    Cesium.DataSource
   hs-source-dirs:
     lib
   default-language:

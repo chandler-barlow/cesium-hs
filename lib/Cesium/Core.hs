@@ -21,6 +21,7 @@ module Cesium.Core
   , consoleLog
   , newArray
   , arrayPush
+  , num
   ) where
 -----------------------------------------------------------------------------
 import GHC.Wasm.Prim
@@ -68,4 +69,10 @@ foreign import javascript unsafe "return []"
 
 foreign import javascript unsafe "$1.push($2)"
   arrayPush :: JSVal -> JSVal -> IO ()
+-----------------------------------------------------------------------------
+-- | Box a raw number as a 'JSVal', e.g. for pushing into an array built
+-- with 'newArray'\/'arrayPush' (object properties can go straight through
+-- 'setPropNum' instead).
+foreign import javascript unsafe "return $1"
+  num :: Double -> IO JSVal
 -----------------------------------------------------------------------------

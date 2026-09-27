@@ -67,6 +67,45 @@ initCesium = do
     Cesium.consoleLog picked
     londonDest <- Cesium.cartesian3FromDegrees (-0.1276) 51.5074 5000000
     Cesium.flyTo viewer londonDest
+
+  -- Phase 5: an inline GeoJSON point, loaded through a genuinely async
+  -- Cesium call (exercises the Phase 0 "Promise bridging" item)
+  geojson <- parisGeoJson
+  geojsonOpts <- Cesium.newObject
+  dataSource <- Cesium.loadGeoJsonData geojson geojsonOpts
+  _ <- Cesium.addDataSource viewer dataSource
+  pure ()
+-----------------------------------------------------------------------------
+-- | A minimal GeoJSON @FeatureCollection@ (one @Point@), built directly
+-- with "Cesium.Core"'s object\/array helpers - no network fetch needed to
+-- demonstrate 'Cesium.loadGeoJsonData'.
+parisGeoJson :: IO Cesium.JSVal
+parisGeoJson = do
+  lon <- Cesium.num 2.3522
+  lat <- Cesium.num 48.8566
+  coords <- Cesium.newArray
+  Cesium.arrayPush coords lon
+  Cesium.arrayPush coords lat
+
+  geometry <- Cesium.newObject
+  Cesium.setPropStr geometry (Cesium.str "type") (Cesium.str "Point")
+  Cesium.setProp geometry (Cesium.str "coordinates") coords
+
+  properties <- Cesium.newObject
+  Cesium.setPropStr properties (Cesium.str "name") (Cesium.str "Paris")
+
+  feature <- Cesium.newObject
+  Cesium.setPropStr feature (Cesium.str "type") (Cesium.str "Feature")
+  Cesium.setProp feature (Cesium.str "geometry") geometry
+  Cesium.setProp feature (Cesium.str "properties") properties
+
+  features <- Cesium.newArray
+  Cesium.arrayPush features feature
+
+  fc <- Cesium.newObject
+  Cesium.setPropStr fc (Cesium.str "type") (Cesium.str "FeatureCollection")
+  Cesium.setProp fc (Cesium.str "features") features
+  pure fc
 -----------------------------------------------------------------------------
 viewModel :: Model -> View context props Model Action
 viewModel _ =
