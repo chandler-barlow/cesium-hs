@@ -46,13 +46,16 @@ data Tracked = Tracked
   , trackedPosition :: Cesium.SampledPositionProperty
   }
 -----------------------------------------------------------------------------
--- | Screen-upright dart icon (fill color set via percent-encoded @#@,
--- since a literal @#@ would truncate a data URI at the fragment). Fully
--- self-contained - no network dependency for the icon itself, unlike the
--- flight data.
+-- | A small top-down airplane silhouette - tapered fuselage, swept main
+-- wings, swept tail wings, each a simple 4-point quadrilateral (no
+-- curves) so the shape is easy to get right without a browser to preview
+-- it in. Screen-upright by default (nose at the top); fill color set via
+-- percent-encoded @#@, since a literal @#@ would truncate a data URI at
+-- the fragment. Fully self-contained - no network dependency for the
+-- icon itself, unlike the flight data.
 planeIcon :: String
 planeIcon =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M12 1 L18 21 L12 17 L6 21 Z' fill='%2300e5ff' stroke='%23012026' stroke-width='1'/%3E%3C/svg%3E"
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 24 24'%3E%3Cpath d='M12 0 L13 4 L13 22 L11 22 L11 4 Z M13 9 L24 13 L24 14 L13 12 Z M11 9 L0 13 L0 14 L11 12 Z M13 18 L19 20.5 L19 21.5 L13 20 Z M11 18 L5 20.5 L5 21.5 L11 20 Z' fill='%2300e5ff' stroke='%23012026' stroke-width='0.5'/%3E%3C/svg%3E"
 -----------------------------------------------------------------------------
 usCenterLat, usCenterLon, usRadiusNm :: Double
 usCenterLat = 39.5
@@ -76,12 +79,16 @@ proxyUrl =
 pollUSFlights :: Cesium.Viewer -> IO ()
 pollUSFlights viewer = do
   trackedRef <- newIORef Map.empty
-  let poll = pollOnce viewer trackedRef
+  -- Subtle from the full-US overview, easier to make out once you've
+  -- zoomed in on one - see Cesium.Math.nearFarScalar's docs for how the
+  -- two distances clamp outside their range.
+  iconScale <- Cesium.nearFarScalar 1000 1.5 1000000 0.5
+  let poll = pollOnce viewer iconScale trackedRef
   poll
   Browser.setInterval poll 5000
 -----------------------------------------------------------------------------
-pollOnce :: Cesium.Viewer -> IORef (Map String Tracked) -> IO ()
-pollOnce viewer trackedRef = do
+pollOnce :: Cesium.Viewer -> Cesium.NearFarScalar -> IORef (Map String Tracked) -> IO ()
+pollOnce viewer iconScale trackedRef = do
   result <- try (Browser.fetchJson proxyUrl) :: IO (Either SomeException Cesium.JSVal)
   case result of
     Left err ->
@@ -92,20 +99,21 @@ pollOnce viewer trackedRef = do
       aircraft <- Cesium.getProp json (Cesium.str "ac")
       len <- Cesium.arrayLength aircraft
       old <- readIORef trackedRef
-      new <- foldM (updateOne viewer now old aircraft) Map.empty [0 .. round len - 1]
+      new <- foldM (updateOne viewer iconScale now old aircraft) Map.empty [0 .. round len - 1]
       -- anything present before this poll but not seen in it has left the feed
       mapM_ (Cesium.removeEntity viewer . trackedEntity) (Map.elems (Map.difference old new))
       writeIORef trackedRef new
 -----------------------------------------------------------------------------
 updateOne
   :: Cesium.Viewer
+  -> Cesium.NearFarScalar
   -> Cesium.JulianDate
   -> Map String Tracked
   -> Cesium.JSVal
   -> Map String Tracked
   -> Int
   -> IO (Map String Tracked)
-updateOne viewer now old aircraft acc i = do
+updateOne viewer iconScale now old aircraft acc i = do
   ac <- Cesium.arrayIndex aircraft (fromIntegral i)
   hex <- Cesium.unstr <$> Cesium.getPropStrOr ac (Cesium.str "hex") (Cesium.str "")
   hasPosition <- (&&)
@@ -135,7 +143,7 @@ updateOne viewer now old aircraft acc i = do
           billboard <- Options.toOptions Simple.defaultBillboardOptions
             { Simple.image = Just planeIcon
             , Simple.rotation = Just rotation
-            , Simple.scale = Just 0.6
+            , Simple.scaleByDistance = Just iconScale
             }
           opts <- Cesium.newObject
           Cesium.setProp opts (Cesium.str "position") (Cesium.unSampledPositionProperty posProp)

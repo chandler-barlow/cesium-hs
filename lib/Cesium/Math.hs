@@ -25,6 +25,9 @@ module Cesium.Math
   , JulianDate
   , unJulianDate
   , julianDateNow
+  , NearFarScalar
+  , unNearFarScalar
+  , nearFarScalar
   , toRadians
   , toDegrees
   ) where
@@ -138,6 +141,26 @@ foreign import javascript unsafe "return Cesium.JulianDate.now()"
 
 julianDateNow :: IO JulianDate
 julianDateNow = JulianDate <$> js_julianDateNow
+-----------------------------------------------------------------------------
+-- | A scale (or alpha, translucency, ...) that varies with camera
+-- distance - e.g. for 'Cesium.Simple.BillboardOptions'' @scaleByDistance@,
+-- to keep a billboard subtle from far away but easier to see up close.
+newtype NearFarScalar = NearFarScalar JSVal
+
+unNearFarScalar :: NearFarScalar -> JSVal
+unNearFarScalar (NearFarScalar v) = v
+
+foreign import javascript unsafe "return new Cesium.NearFarScalar($1, $2, $3, $4)"
+  js_nearFarScalar :: Double -> Double -> Double -> Double -> IO JSVal
+
+-- | @nearFarScalar nearDistance nearValue farDistance farValue@ (distances
+-- in metres, camera-to-object). Linearly interpolated between the two
+-- distances; clamped to @nearValue@\/@farValue@ outside that range - so
+-- @farDistance@ only needs to be "far enough that we've already reached
+-- the minimum," not the actual farthest distance the camera might reach.
+nearFarScalar :: Double -> Double -> Double -> Double -> IO NearFarScalar
+nearFarScalar nearDistance nearValue farDistance farValue =
+  NearFarScalar <$> js_nearFarScalar nearDistance nearValue farDistance farValue
 -----------------------------------------------------------------------------
 -- | Pure - no need to round-trip through JS for basic trig conversions.
 toRadians :: Double -> Double

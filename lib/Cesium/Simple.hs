@@ -47,7 +47,7 @@ import GHC.Generics (Generic)
 
 import Cesium.Core
 import Cesium.Options
-import Cesium.Math (Cartesian3, Color, unCartesian3)
+import Cesium.Math (Cartesian3, Color, NearFarScalar, unCartesian3)
 import Cesium.Viewer (Viewer)
 import Cesium.Entity (Entity)
 
@@ -161,6 +161,7 @@ data BillboardOptions = BillboardOptions
   , rotation :: Maybe Double
   , scale :: Maybe Double
   , color :: Maybe Color
+  , scaleByDistance :: Maybe NearFarScalar
   } deriving (Generic)
 
 instance ToOptions BillboardOptions
@@ -171,6 +172,7 @@ defaultBillboardOptions = BillboardOptions
   , rotation = Nothing
   , scale = Nothing
   , color = Nothing
+  , scaleByDistance = Nothing
   }
 
 addBillboardEntity :: Viewer -> Cartesian3 -> BillboardOptions -> IO Entity

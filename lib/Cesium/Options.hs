@@ -31,7 +31,7 @@ module Cesium.Options
 import GHC.Generics
 
 import Cesium.Core
-import Cesium.Math (Cartesian3, Color, unCartesian3, unColor)
+import Cesium.Math (Cartesian3, Color, NearFarScalar, unCartesian3, unColor, unNearFarScalar)
 -----------------------------------------------------------------------------
 -- | A record that can become a Cesium options object.
 class ToOptions a where
@@ -82,6 +82,9 @@ instance ToOptionValue Color where
 
 instance ToOptionValue Cartesian3 where
   setOptionValue o k c = setProp o k (unCartesian3 c)
+
+instance ToOptionValue NearFarScalar where
+  setOptionValue o k s = setProp o k (unNearFarScalar s)
 
 -- | Escape hatch: an already-built raw value (e.g. from another
 -- 'ToOptions' record, or hand-assembled with "Cesium.Core").

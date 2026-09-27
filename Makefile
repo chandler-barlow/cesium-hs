@@ -22,7 +22,7 @@ repl:
 	wasm32-wasi-cabal repl cesium-hello-globe -finteractive --repl-options='-fghci-browser -fghci-browser-port=8080'
 
 serve:
-	http-server public
+	http-server public -c-1
 
 # For the live-flights demo. Native, not wasm - run this from the
 # project's *default* devShell (`nix develop`, no `.#wasm`), in its own
