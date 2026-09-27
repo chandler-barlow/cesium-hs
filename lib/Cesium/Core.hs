@@ -22,6 +22,7 @@ module Cesium.Core
   , newArray
   , arrayPush
   , num
+  , setIonAccessToken
   ) where
 -----------------------------------------------------------------------------
 import GHC.Wasm.Prim
@@ -75,4 +76,12 @@ foreign import javascript unsafe "$1.push($2)"
 -- 'setPropNum' instead).
 foreign import javascript unsafe "return $1"
   num :: Double -> IO JSVal
+-----------------------------------------------------------------------------
+-- | Required before using any Cesium Ion asset (world imagery/terrain,
+-- hosted 3D Tiles, ...) - get a token from https://ion.cesium.com.
+foreign import javascript unsafe "Cesium.Ion.defaultAccessToken = $1"
+  js_setIonAccessToken :: JSString -> IO ()
+
+setIonAccessToken :: String -> IO ()
+setIonAccessToken = js_setIonAccessToken . str
 -----------------------------------------------------------------------------

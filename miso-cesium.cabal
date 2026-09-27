@@ -32,6 +32,8 @@ library
     Cesium.Events
     Cesium.Entity
     Cesium.DataSource
+    Cesium.Imagery
+    Cesium.Terrain
   hs-source-dirs:
     lib
   default-language:

@@ -74,7 +74,17 @@ initCesium = do
   geojsonOpts <- Cesium.newObject
   dataSource <- Cesium.loadGeoJsonData geojson geojsonOpts
   _ <- Cesium.addDataSource viewer dataSource
-  pure ()
+
+  -- Phase 6: an extra OSM tile layer at half alpha, over an explicit
+  -- (procedural, no-network) terrain provider
+  imageryOpts <- Cesium.newObject
+  Cesium.setPropStr imageryOpts (Cesium.str "url") (Cesium.str "https://tile.openstreetmap.org/{z}/{x}/{y}.png")
+  provider <- Cesium.urlTemplateImageryProvider imageryOpts
+  layer <- Cesium.addImageryLayer viewer provider
+  Cesium.setImageryLayerAlpha layer 0.5
+
+  terrain <- Cesium.ellipsoidTerrainProvider
+  Cesium.setTerrainProvider viewer terrain
 -----------------------------------------------------------------------------
 -- | A minimal GeoJSON @FeatureCollection@ (one @Point@), built directly
 -- with "Cesium.Core"'s object\/array helpers - no network fetch needed to

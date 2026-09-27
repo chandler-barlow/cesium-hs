@@ -68,10 +68,13 @@ type-checked FFI import that's never been called is not verified.
 
 ## Phase 6 - Imagery & terrain
 
-- [ ] `ImageryLayerCollection`/`ImageryLayer` (add/remove/reorder, alpha/brightness)
-- [ ] `UrlTemplateImageryProvider`, `WebMapServiceImageryProvider`, `IonImageryProvider`
-- [ ] `TerrainProvider` interface, `CesiumTerrainProvider`, `EllipsoidTerrainProvider`
-- [ ] `Cesium.Ion.defaultAccessToken` configuration
+- [x] `ImageryLayerCollection`/`ImageryLayer` (`addImageryLayer`/`removeImageryLayer`, `setImageryLayerAlpha`/`Brightness`) - exercised (OSM overlay at alpha 0.5); reordering not bound yet
+- [x] `UrlTemplateImageryProvider` - exercised (OSM tiles)
+- [x] `WebMapServiceImageryProvider` - implemented, not yet exercised
+- [x] `IonImageryProvider` (`fromAssetId`) - implemented, not yet exercised (needs a real Ion token)
+- [x] `TerrainProvider` interface, `EllipsoidTerrainProvider` - exercised (`setTerrainProvider`)
+- [x] `CesiumTerrainProvider.fromUrl` - implemented, not yet exercised (needs a real tileset URL/Ion token)
+- [x] `Cesium.Ion.defaultAccessToken` configuration (`Cesium.Core.setIonAccessToken`) - implemented, not yet exercised (no token on hand)
 
 ## Phase 7 - Primitives (stretch)
 

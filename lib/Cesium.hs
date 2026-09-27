@@ -8,6 +8,8 @@ module Cesium
   , module Cesium.Events
   , module Cesium.Entity
   , module Cesium.DataSource
+  , module Cesium.Imagery
+  , module Cesium.Terrain
   ) where
 -----------------------------------------------------------------------------
 import Cesium.Core
@@ -16,4 +18,6 @@ import Cesium.Viewer
 import Cesium.Events
 import Cesium.Entity
 import Cesium.DataSource
+import Cesium.Imagery
+import Cesium.Terrain
 -----------------------------------------------------------------------------
