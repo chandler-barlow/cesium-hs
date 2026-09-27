@@ -34,6 +34,9 @@ library
     Cesium.DataSource
     Cesium.Imagery
     Cesium.Terrain
+    Cesium.Scene
+    Cesium.Clock
+    Cesium.Tileset
   hs-source-dirs:
     lib
   default-language:

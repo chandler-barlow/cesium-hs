@@ -85,6 +85,28 @@ initCesium = do
 
   terrain <- Cesium.ellipsoidTerrainProvider
   Cesium.setTerrainProvider viewer terrain
+
+  -- Phase 9: scene/globe/clock toggles
+  configureSceneAndClock viewer
+-----------------------------------------------------------------------------
+-- | Phase 9: a scene/globe/clock configuration pass, kept separate from
+-- 'initCesium' just for readability.
+configureSceneAndClock :: Cesium.Viewer -> IO ()
+configureSceneAndClock viewer = do
+  Cesium.setFogEnabled viewer True
+  Cesium.setSkyAtmosphereShow viewer True
+  Cesium.setMsaaSamples viewer 4
+
+  globeColor <- Cesium.colorFromCss "#001a33"
+  Cesium.setGlobeBaseColor viewer globeColor
+  Cesium.setDepthTestAgainstTerrain viewer True
+  Cesium.setGlobeTranslucency viewer True 0.8
+
+  currentTime <- Cesium.julianDateNow
+  Cesium.setClockCurrentTime viewer currentTime
+  Cesium.setClockShouldAnimate viewer True
+  Cesium.setClockMultiplier viewer 60
+  Cesium.setClockRange viewer "LOOP_STOP"
 -----------------------------------------------------------------------------
 -- | A minimal GeoJSON @FeatureCollection@ (one @Point@), built directly
 -- with "Cesium.Core"'s object\/array helpers - no network fetch needed to

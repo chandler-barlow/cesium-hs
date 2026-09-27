@@ -78,21 +78,27 @@ type-checked FFI import that's never been called is not verified.
 
 ## Phase 7 - Primitives (stretch)
 
-- [ ] `PrimitiveCollection`, `Primitive`, `GroundPrimitive`
-- [ ] `PointPrimitiveCollection`, `BillboardCollection`, `LabelCollection`
-- [ ] `Appearance`/`Material` subset
+- [ ] **Deliberately deprioritized.** The Entity API (Phase 4) already covers
+      point/label/billboard/polyline/polygon for anything this spike or a
+      typical app needs; raw `PrimitiveCollection`/`Primitive`/
+      `GroundPrimitive`/`PointPrimitiveCollection`/`BillboardCollection`/
+      `LabelCollection`/`Appearance`/`Material` is a lower-level,
+      performance-tuned API (bulk-rendering thousands of primitives faster
+      than the Entity API can). Worth doing only if something downstream
+      actually needs that performance - revisit then.
 
 ## Phase 8 - 3D Tiles
 
-- [ ] `Cesium3DTileset.fromUrl`/`fromIonAssetId`
-- [ ] `Cesium3DTileStyle`
-- [ ] Tileset events (`tileLoad`, `allTilesLoaded`)
+- [x] `Cesium3DTileset.fromUrl`/`fromIonAssetId` - implemented, not yet exercised (needs a hosted tileset.json or a real Ion token)
+- [x] `Cesium3DTileStyle` (`newTilesetStyle`/`setTilesetStyle`) - implemented, not yet exercised
+- [x] Tileset events (`onTileLoad`, `onAllTilesLoaded`) - implemented, not yet exercised
 
 ## Phase 9 - Scene/Globe/Clock
 
-- [ ] `Scene` options (fog, skybox, sky atmosphere, MSAA)
-- [ ] `Globe` (base color, depth-test-against-terrain, translucency)
-- [ ] `Clock` + `ClockRange` + `TimeIntervalCollection`
+- [x] `Scene` options: fog (`setFogEnabled`), sky atmosphere (`setSkyAtmosphereShow`), MSAA (`setMsaaSamples`) - all exercised; skybox `show` not bound (same pattern, low priority)
+- [x] `Globe`: base color, depth-test-against-terrain, translucency - all exercised (`configureSceneAndClock` in the example)
+- [x] `Clock`: `shouldAnimate`, `multiplier`, `clockRange`, `currentTime` - all exercised
+- [ ] `TimeIntervalCollection` - not started, nothing needs it yet
 
 ## Cross-cutting, ongoing
 

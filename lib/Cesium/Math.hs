@@ -23,6 +23,7 @@ module Cesium.Math
   , Quaternion
   , quaternionFromAxisAngle
   , JulianDate
+  , unJulianDate
   , julianDateNow
   , toRadians
   , toDegrees
@@ -128,6 +129,9 @@ quaternionFromAxisAngle (Cartesian3 axis) angle =
 -----------------------------------------------------------------------------
 -- | An instant in time, in Cesium's own calendar representation.
 newtype JulianDate = JulianDate JSVal
+
+unJulianDate :: JulianDate -> JSVal
+unJulianDate (JulianDate v) = v
 
 foreign import javascript unsafe "return Cesium.JulianDate.now()"
   js_julianDateNow :: IO JSVal

@@ -10,6 +10,9 @@ module Cesium
   , module Cesium.DataSource
   , module Cesium.Imagery
   , module Cesium.Terrain
+  , module Cesium.Scene
+  , module Cesium.Clock
+  , module Cesium.Tileset
   ) where
 -----------------------------------------------------------------------------
 import Cesium.Core
@@ -20,4 +23,7 @@ import Cesium.Entity
 import Cesium.DataSource
 import Cesium.Imagery
 import Cesium.Terrain
+import Cesium.Scene
+import Cesium.Clock
+import Cesium.Tileset
 -----------------------------------------------------------------------------
