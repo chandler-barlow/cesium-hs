@@ -1,7 +1,8 @@
 -----------------------------------------------------------------------------
-{-# LANGUAGE CPP               #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE CPP                   #-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE LambdaCase            #-}
+{-# LANGUAGE OverloadedStrings     #-}
 -----------------------------------------------------------------------------
 module Main where
 -----------------------------------------------------------------------------
@@ -11,6 +12,7 @@ import           Miso.Html.Element as H
 import           Miso.Html.Property as P
 -----------------------------------------------------------------------------
 import qualified Cesium
+import qualified Cesium.Simple as Simple
 -----------------------------------------------------------------------------
 data Model = Model
   deriving (Show, Eq)
@@ -43,8 +45,12 @@ updateModel = \case
 -- of the canvas it injects.
 initCesium :: IO ()
 initCesium = do
-  opts <- Cesium.newObject
-  viewer <- Cesium.newViewer (Cesium.str "cesium-container") opts
+  -- Cesium.Simple: a generic-derived options record instead of hand-built
+  -- newObject/setProp calls, covering the widgets everyone turns off
+  viewer <- Simple.newViewer (Cesium.str "cesium-container") Simple.defaultViewerOptions
+    { Simple.timeline = Just False
+    , Simple.animation = Just False
+    }
 
   -- Phase 2: Cartesian3 + Color, Phase 3: setView (straight down, no animation)
   nyc <- Cesium.cartesian3FromDegrees (-74.0060) 40.7128 15000000
@@ -57,6 +63,23 @@ initCesium = do
   red <- Cesium.colorNamed "RED"
   _ <- Cesium.addPointEntity viewer london 12 red
   _ <- Cesium.addLabelEntity viewer london "London"
+
+  -- Cesium.Simple: the same kind of marker, but through the generic
+  -- ToOptions machinery, with more fields than the raw addPointEntity/
+  -- addLabelEntity expose (outlineColor, outlineWidth, fillColor, ...)
+  tokyo <- Cesium.cartesian3FromDegrees 139.6917 35.6895 0
+  yellow <- Cesium.colorNamed "YELLOW"
+  black <- Cesium.colorNamed "BLACK"
+  _ <- Simple.addPointEntity viewer tokyo Simple.defaultPointOptions
+    { Simple.pixelSize = Just 14
+    , Simple.color = Just yellow
+    , Simple.outlineColor = Just black
+    , Simple.outlineWidth = Just 2
+    }
+  _ <- Simple.addLabelEntity viewer tokyo Simple.defaultLabelOptions
+    { Simple.text = Just "Tokyo"
+    , Simple.fillColor = Just yellow
+    }
 
   -- Phase 3 + 4: click handling via the "wrapper" JSFFI callback bridge,
   -- picking whatever entity (if any) is under the cursor

@@ -37,6 +37,8 @@ library
     Cesium.Scene
     Cesium.Clock
     Cesium.Tileset
+    Cesium.Options
+    Cesium.Simple
   hs-source-dirs:
     lib
   default-language:

@@ -8,6 +8,31 @@ Check an item off once its binding compiles *and* has been exercised from
 `cesium-hello-globe` (or the ghci-browser REPL) in a real browser - a
 type-checked FFI import that's never been called is not verified.
 
+## Higher-level layer: Cesium.Simple
+
+Everything above is intentionally raw: options objects are built by hand
+with `Cesium.Core`'s `newObject`/`setProp*`, and each convenience
+constructor only exposes the handful of fields it was written for.
+`Cesium.Options` adds a generic `ToOptions` typeclass (`GHC.Generics`-
+derived): define a record with fields named exactly like Cesium's own JS
+option keys, wrap each in `Maybe` (`Nothing` = omit the key, Cesium's
+default applies), derive `Generic`, write an empty `instance ToOptions
+MyRecord` - done. `Cesium.Simple` is the first consumer of that machinery:
+
+- [x] `ViewerOptions` (the boolean UI-widget toggles) + `newViewer`
+- [x] `PointOptions` (`pixelSize`/`color`/`outlineColor`/`outlineWidth`/`show`) + `addPointEntity`
+- [x] `LabelOptions` (`text`/`font`/`fillColor`/`outlineColor`/`showBackground`/`scale`) + `addLabelEntity`
+- [ ] Everything else - same pattern (record + `deriving Generic` + empty instance + a `defaultXOptions` value), added as something needs it
+
+Deliberately **not** re-exported from the `Cesium` umbrella module - import
+it qualified (`import qualified Cesium.Simple as Simple`) since some names
+(`newViewer`, field names like `color`) are meant to replace the raw ones
+at a call site. Field names that collide with `Prelude` (`show`, and
+eventually `id`) work because the records use `NoFieldSelectors` +
+`DuplicateRecordFields` - importing modules need `DuplicateRecordFields`
+too, to disambiguate same-named fields across different option records in
+record-update syntax (see `app/Main.hs`).
+
 ## Phase 0 - FFI plumbing
 
 - [x] `Cesium.Core`: `newObject`/`setProp*`/`getProp`/`global` helpers over `JSVal`
